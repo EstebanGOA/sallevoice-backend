@@ -3,11 +3,12 @@ from . import *
 import os
 import aiofiles
 
+
 class AudioService:
-    def get_audio_filenames(self): 
+    def get_audio_filenames(self) -> list[str]:
         return [f for f in os.listdir("resources/outputs") if os.path.isfile(os.path.join("resources/outputs", f))]
-    
-    def get_audio_by_filename(self, filename): 
+
+    def get_audio_by_filename(self, filename: str) -> str:
         """Recoge la ruta de un archivo de audio a partir de su nombre. 
 
         Args:
@@ -16,9 +17,9 @@ class AudioService:
         Returns:
             _type_: Ruta del archivo de audio.
         """
-        return os.path.join("resources/outputs", filename)
-    
-    async def save_file(in_file: UploadFile = File(...), out_file_path: str = "resources/inputs/input.wav"):
+        return MessageResponse(message=os.path.join("resources/outputs", filename))
+
+    async def save_file(in_file: UploadFile = File(...), out_file_path: str = "resources/inputs/input.wav") -> str:
         """Guarda un archivo en disco a partir de un archivo subido. 
 
         Args:

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Direcciones IP permitidas para CORS
 origins = [
-    'http://localhost:4200' # Aplicación Angular en desarrollo
+    'http://localhost:4200'  # Aplicación Angular en desarrollo
 ]
 
 app = FastAPI(
@@ -27,7 +27,6 @@ app.include_router(common_router, prefix="/api", tags=["Common"])
 app.include_router(cq_router, prefix="/api/coqui", tags=["Coqui TTS"])
 app.include_router(sb_router, prefix="/api/speechbrain", tags=["SpeechBrain"])
 
-print(common_router.routes)
 
 @app.get("/")
 async def root():
