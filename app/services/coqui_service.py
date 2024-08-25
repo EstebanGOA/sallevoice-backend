@@ -1,14 +1,22 @@
+import os
 from . import *
 
 import uuid
 import torch
-from TTS.api import TTS  # Example Coqui TTS model
+import base64
+import logging
+import io
 
+from fastapi import HTTPException
+from TTS.api import TTS 
+from pydub import AudioSegment
+
+# Configure the logger
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class CoquiService:
-
-    BASE_OUTPUT_PATH = "resources/outputs/"
-    BASE_INPUT_PATH = "resources/inputs/"
 
     blacklisted_models = ["tts_models/multilingual/multi-dataset/bark",
                           "tts_models/en/ljspeech/vits",
@@ -84,7 +92,7 @@ class CoquiService:
         self.api = TTS(model_name=request.model)
         # Generate random audio filename
         filename = str(uuid.uuid4()) + ".wav"
-        filepath = self.BASE_OUTPUT_PATH + filename
+        filepath = BASE_OUTPUT_PATH + filename
         self.api.tts_to_file(
             text=request.text,
             speaker=request.speaker if self.api.is_multi_speaker else None,
@@ -93,25 +101,43 @@ class CoquiService:
         )
         return MessageResponse(message=filename)
 
-    # TODO: Se deben controlar los siguiente errores:
-    # - El archivo de audio no es un archivo WAV.
-    # - Si el modelo es multilingual se debe pasar como parámetro el idioma. Por defecto será español.
-    # - Para saber los speaker que se pueden seleccionar de un modelo se puede usar el método tts_speakers()
-    def generate_voice_cloning(self, request: CoquiRequest) -> MessageResponse:
+    async def generate_voice_cloning(self, request: CoquiRequest) -> MessageResponse:
         self.api = TTS(model_name=request.model)
 
-        inputFilepath = AudioService.save_file(in_file=request.speaker_input)
+        try: 
+            base64_data = request.speaker_input.split(",")[-1]
+            decoded_speaker_input = base64.b64decode(base64_data)
+        except Exception as e: 
+            raise HTTPException(status_code=400, detail="Invalid Base64 for speaker_input")
+        
+        input_filepath = BASE_INPUT_PATH + str(uuid.uuid4()) + ".webm"
+        input_wav_filepath = BASE_INPUT_PATH + str(uuid.uuid4()) + ".wav"
+        with open(input_filepath, "wb") as f:
+            f.write(decoded_speaker_input)
 
+        # Convert the input file to WAV format if necessary
+        audio = AudioSegment.from_file(input_filepath, format="webm")
+        audio = audio.set_sample_width(2)
+        audio = audio.set_channels(2)
+        audio = audio.set_frame_rate(48000)
+        audio.export(input_wav_filepath, format="wav")
+
+        # Delete the webm file
+        os.remove(input_filepath)
+        
+        output_filepath = BASE_OUTPUT_PATH + str(uuid.uuid4()) + ".wav"
         params = {
             "text": request.text,
-            "speaker_wav": inputFilepath,
+            "speaker_wav": input_wav_filepath,
             "language": request.language,
-            "file_path": self.BASE_OUTPUT_PATH
+            "file_path": output_filepath
         }
 
         if self.api.is_multi_lingual:
             params["language"] = request.language
 
+        logger.info(params)
+
         self.api.tts_to_file(**params)
 
-        return MessageResponse(message=self.BASE_OUTPUT_PATH)
+        return MessageResponse(message=output_filepath.split("/")[-1])

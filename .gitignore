@@ -1,4 +1,5 @@
 **/__pycache__/
 env_sallevoice/
+venv/
 resources/
 tmpdir_*/

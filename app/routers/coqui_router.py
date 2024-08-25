@@ -8,8 +8,10 @@ import json
 cq_router = APIRouter()
 
 # Configure the logger
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
 
 @cq_router.post("/generate", response_description="Genera un archivo de audio a partir de un texto.")
 async def generate_audio(request: CoquiRequest):
@@ -43,9 +45,9 @@ async def generate_voice_cloning(request: CoquiRequest):
     Returns:
         _type_: El archivo de audio generado.
     """
-    audio_path = coqui_service.generate_voice_cloning(request)
-    if os.path.isfile(audio_path):
-        return FileResponse(path=audio_path, media_type="audio/wav")
+    response = await coqui_service.generate_voice_cloning(request)
+    if response.message is not None:
+        return JSONResponse(content=response.model_dump())
     else:
         return JSONResponse(content=MessageResponse("Error al generar el archivo de audio.").model_dump())
 
@@ -65,4 +67,4 @@ async def get_model_info(request: Request):
     if 'model_name' not in params:
         return JSONResponse(content=MessageResponse("No se ha especificado el nombre del modelo."))
 
-    return JSONResponse(content=coqui_service.get_model_info(params['model_name']).model_dump( ))
+    return JSONResponse(content=coqui_service.get_model_info(params['model_name']).model_dump())

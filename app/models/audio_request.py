@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import List
 from pydantic import BaseModel
-
+from fastapi import UploadFile
 
 class ModelRequest(BaseModel):
     name: str
@@ -8,13 +8,13 @@ class ModelRequest(BaseModel):
 
 class CoquiRequest(BaseModel):
     text: str
-    model: str = "tts_models/spa/fairseq/vits"
-    speaker: Optional[str] = None
-    language: Optional[str] = "es"
-    speaker_input: Optional[bytes] = None
+    model: str
+    speaker: str | None = None
+    language: str | None = None
+    speaker_input: str | None = None
 
 
-class BrainSpeechRequest(BaseModel):
+class SpeechBrainRequest(BaseModel):
     text: str
     vocoder: str = "speechbrain/tts-hifigan-ljspeech"
     tts: str = "speechbrain/tts-tacotron2-ljspeech"

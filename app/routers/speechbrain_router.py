@@ -6,10 +6,16 @@ sb_router = APIRouter()
 async def get_models():
     """Obtiene la lista de modelos disponibles para SpeechBrain.
     """
-    return speechbrain_service.list_models()
+    return JSONResponse(content=speechbrain_service.list_models().model_dump())
         
-@sb_router.get("/generate", response_description="Genera un archivo de audio a partir de un texto.")
-async def generate_audio(text: str, vocoder: str = "speechbrain/tts-hifigan-ljspeech", tts: str = "speechbrain/tts-tacotron2-ljspeech"):
+@sb_router.get("/vocoders", response_description="Lista los vocoders disponibles.")
+async def get_vocoders(): 
+    """Obtiene la lista de vocoders disponibles para SpeechBrain.
+    """
+    return JSONResponse(content=speechbrain_service.list_vocoders().model_dump())
+
+@sb_router.post("/generate", response_description="Genera un archivo de audio a partir de un texto.")
+async def generate_audio(request: SpeechBrainRequest):
     """Recibe la petición para generar un archivo de audio a partir de un texto. 
 
     Args:
@@ -17,6 +23,6 @@ async def generate_audio(text: str, vocoder: str = "speechbrain/tts-hifigan-ljsp
         vocoder (str, optional): Nombre del vocoder a utilizar.
         tts (str, optional):: Nombre del modelo a utilizar.
     """
-    audio_path = speechbrain_service.generate_audio(tts=tts, vocoder=vocoder, text=text)
-    return FileResponse(path=audio_path, media_type="audio/wav")
+    response = speechbrain_service.generate_audio(request)
+    return JSONResponse(content=response.model_dump())
     
