@@ -1,0 +1,9 @@
+[
+    {
+        "name": "Coqui",
+        "filename": "981ae5aa-7029-4ced-8e65-fddce55a3a64.wav",
+        "model": "tts_models/multilingual/multi-dataset/xtts_v2",
+        "language": "es",
+        "speaker": "Daisy Sudious"
+    }
+]

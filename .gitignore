@@ -1,5 +1,8 @@
 **/__pycache__/
 env_sallevoice/
 venv/
-resources/
+resources/inputs/
+resources/outputs/
+resources/tts/
+resources/vocoder/
 tmpdir_*/
