@@ -1,5 +1,6 @@
 import logging
-from fastapi.responses import JSONResponse
+
+from fastapi import HTTPException
 from . import *
 
 import os.path
@@ -12,28 +13,8 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-
-@cq_router.post("/generate", response_description="Genera un archivo de audio a partir de un texto.")
-async def generate_audio(request: CoquiRequest):
-    """Genera un archivo de audio a partir de un texto.
-
-    Args:
-        text (str): Texto a convertir en audio.
-        model_name (str, optional): Nombre del modelo a utilizar. Defaults to "tts_models/spa/fairseq/vits".
-
-    Returns:
-        _type_: _description_
-    """
-    logger.info(request)
-    response = coqui_service.generate_audio(request)
-    if response.message is not None:
-        return JSONResponse(content=response.model_dump())
-    else:
-        return JSONResponse(content=MessageResponse("Error al generar el archivo de audio.").model_dump())
-
-
-@cq_router.post('/clone', response_description="Genera un archivo de audio a partir de un texto y un audio de referencia.")
-async def generate_voice_cloning(request: CoquiRequest):
+@cq_router.post('/generate', response_description="Genera un archivo de audio a partir de un texto y un audio de referencia.")
+async def generate(request: CoquiRequest):
     """Genera un archivo de audio a partir de un texto y un audio de referencia.
 
     Args:
@@ -45,12 +26,17 @@ async def generate_voice_cloning(request: CoquiRequest):
     Returns:
         _type_: El archivo de audio generado.
     """
-    response = await coqui_service.generate_voice_cloning(request)
+    logger.info(request)
+    response = await coqui_service.generate(request)
     if response.message is not None:
         return JSONResponse(content=response.model_dump())
     else:
-        return JSONResponse(content=MessageResponse("Error al generar el archivo de audio.").model_dump())
+        raise HTTPException(status_code=400, detail="Error al generar el archivo de audio.")
 
+@cq_router.post('/speaker', response_description="Genera un archivo de audio a partir de un texto y un speaker.")
+async def generate_speaker(request: CoquiCloneRequest):
+    coqui_service.generate_speaker(request)
+    return JSONResponse(content=MessageResponse(message="Speaker generado correctamente.").model_dump())
 
 @cq_router.get('/models', response_description="Lista los modelos disponibles.")
 async def get_models():
@@ -58,6 +44,11 @@ async def get_models():
     """
     return JSONResponse(content=coqui_service.list_models().model_dump())
 
+@cq_router.get('/vc-speakers', response_description="Lista los speakers disponibles para Voice Cloning.")
+async def get_vc_speakers():
+    """Recoge la lista de speakers disponibles para Voice Cloning.
+    """
+    return JSONResponse(content=coqui_service.list_vc_speakers().model_dump())
 
 @cq_router.get('/model', response_description="Muestra información relevante del modelo seleccionado.")
 async def get_model_info(request: Request):
@@ -65,6 +56,6 @@ async def get_model_info(request: Request):
     """
     params = request.query_params
     if 'model_name' not in params:
-        return JSONResponse(content=MessageResponse("No se ha especificado el nombre del modelo."))
+        raise HTTPException(status_code=400, detail="No se ha especificado el nombre del modelo.")
 
     return JSONResponse(content=coqui_service.get_model_info(params['model_name']).model_dump())

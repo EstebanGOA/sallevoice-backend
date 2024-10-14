@@ -24,6 +24,7 @@ def get_audio_by_filename(request: Request):
 
     response: MessageResponse = AudioService().get_audio_by_filename(params['filename'])
 
+    logger.info(response)
     if os.path.isfile(response.message):
         return FileResponse(path=response.message, media_type="audio/wav")
     else:

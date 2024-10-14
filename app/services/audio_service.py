@@ -3,6 +3,7 @@ from . import *
 import os
 import aiofiles
 
+logger = logging.getLogger('services')
 
 class AudioService:
     def get_audio_filenames(self) -> list[str]:

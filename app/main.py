@@ -1,19 +1,23 @@
+import logging
 from fastapi import FastAPI
 from routers.coqui_router import cq_router
 from routers.common_router import common_router
 from routers.speechbrain_router import sb_router
+from routers.polly_router import polly_router
 from fastapi.middleware.cors import CORSMiddleware
 
-# Direcciones IP permitidas para CORS
-origins = [
-    'http://localhost:4200'  # Aplicación Angular en desarrollo
-]
 
 app = FastAPI(
     title="SalleVoice API",
     description="API para la generación de voz a partir de texto.",
     version="0.1.0",
+    debug=True 
 )
+
+# Direcciones IP permitidas para CORS
+origins = [
+    'http://localhost:4200'  # Aplicación Angular en desarrollo
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,7 +30,10 @@ app.add_middleware(
 app.include_router(common_router, prefix="/api", tags=["Common"])
 app.include_router(cq_router, prefix="/api/coqui", tags=["Coqui TTS"])
 app.include_router(sb_router, prefix="/api/speechbrain", tags=["SpeechBrain"])
+app.include_router(polly_router, prefix="/api/polly", tags=["Polly"])
 
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 @app.get("/")
 async def root():
