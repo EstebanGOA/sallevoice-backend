@@ -16,8 +16,8 @@ class PollyService():
 
     def __init__(self):
         self.client = Session(
-            aws_access_key_id="AKIATNVEV3B5WKWUK47C",
-            aws_secret_access_key="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",
+            aws_access_key_id="ACCESS_KEY",
+            aws_secret_access_key="SECRET_KEY",
             region_name="us-east-1"
         ).client("polly")
 
